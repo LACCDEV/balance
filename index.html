@@ -35,22 +35,22 @@
       transform: translate(-50%, -50%);
     }
 
-#ball {
-  position: absolute;
-  width: 70vw;
-  height: 70vw;
-  max-width: 300px;
-  max-height: 300px;
-  background: limegreen;
-  border-radius: 50%;
-  box-shadow: 0 0 40px limegreen;
-  transition: transform 0.1s linear;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
+    #ball {
+      position: absolute;
+      width: 70vw;
+      height: 70vw;
+      max-width: 300px;
+      max-height: 300px;
+      background: limegreen;
+      border-radius: 50%;
+      box-shadow: 0 0 40px limegreen;
+      transition: transform 0.1s linear;
+      z-index: 2;
+      transform: scale(1);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.5);
+    }
 
     #wind {
       position: absolute;
@@ -178,52 +178,51 @@
       tiltY = e.beta || 0;
     });
 
-function startGame() {
-  startButton.style.display = 'none';
+    function startGame() {
+      startButton.style.display = 'none';
 
-  // Zeige Countdown
-  let count = 3;
-  countdownEl.innerText = count;
-  countdownEl.style.display = 'block';
-
-  // Verkleinungsanimation vorbereiten
-  ball.style.transition = 'transform 0.3s ease';
-
-  const countdownInterval = setInterval(() => {
-    count--;
-    if (count > 0) {
+      // Zeige Countdown
+      let count = 3;
       countdownEl.innerText = count;
-      const scale = 1.5 - (3 - count) * 0.3; // Startet bei 1.5 und verkleinert sich
-      ball.style.transform = `translate(-50%, -50%) scale(${scale})`;
-    } else {
-      clearInterval(countdownInterval);
-      countdownEl.style.display = 'none';
+      countdownEl.style.display = 'block';
 
-      // Setze Ball auf Spielgröße
-      ball.style.transform = 'translate(-50%, -50%) scale(0.4)';
-      ball.style.transition = 'transform 0.1s linear';
+      // Verkleinungsanimation vorbereiten
+      ball.style.transition = 'transform 0.3s ease';
 
-      // Starte das Spiel
-      x = window.innerWidth / 2;
-      y = window.innerHeight / 2;
-      updateBallPosition();
-      active = true;
-      startTime = Date.now();
-      requestAnimationFrame(gameLoop);
+      const countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownEl.innerText = count;
+          const scale = 1.5 - (3 - count) * 0.3; // Startet bei 1.5 und verkleinert sich
+          ball.style.transform = translate(-50%, -50%) scale(${scale});
+        } else {
+          clearInterval(countdownInterval);
+          countdownEl.style.display = 'none';
+
+          // Setze Ball auf Spielgröße
+          ball.style.transform = 'translate(-50%, -50%) scale(0.4)';
+          ball.style.transition = 'transform 0.1s linear';
+
+          // Starte das Spiel
+          x = window.innerWidth / 2;
+          y = window.innerHeight / 2;
+          updateBallPosition();
+          active = true;
+          startTime = Date.now();
+          requestAnimationFrame(gameLoop);
+        }
+      }, 1000);
     }
-  }, 1000);
-}
-
 
     function updateScores() {
       const topScores = scores.sort((a,b) => b-a).slice(0, 5);
       scoresEl.innerHTML = 'Bestenliste:<br>' +
-        topScores.map((s, i) => `${i + 1}. ${s.toFixed(1)}s`).join('<br>');
+        topScores.map((s, i) => ${i + 1}. ${s.toFixed(1)}s).join('<br>');
     }
 
     function updateBallPosition() {
-      ball.style.left = `${x - ball.offsetWidth / 2}px`;
-      ball.style.top = `${y - ball.offsetHeight / 2}px`;
+      ball.style.left = ${x - ball.offsetWidth / 2}px;
+      ball.style.top = ${y - ball.offsetHeight / 2}px;
     }
 
     function updateBall() {
@@ -243,7 +242,7 @@ function startGame() {
       if (distance > 750) {
         active = false;
         const finalTime = ((Date.now() - startTime)/1000).toFixed(1);
-        gameOverText.innerText = `Game Over! Zeit: ${finalTime}s`;
+        gameOverText.innerText = Game Over! Zeit: ${finalTime}s;
         gameOver.style.display = 'flex';
         scores.push(parseFloat(finalTime));
         updateScores();
@@ -271,8 +270,8 @@ function startGame() {
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
 
-      wind.style.left = `${x - 75}px`;
-      wind.style.top = `${y - 75}px`;
+      wind.style.left = ${x - 75}px;
+      wind.style.top = ${y - 75}px;
       wind.style.display = 'block';
 
       setTimeout(() => {
