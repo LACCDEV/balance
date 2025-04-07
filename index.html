@@ -68,6 +68,34 @@
       100% { transform: scale(1.5); opacity: 0; }
     }
 
+    #startScreen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #startButton {
+      font-size: 24px;
+      padding: 10px 30px;
+      background: limegreen;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    #countdown {
+      font-size: 48px;
+      margin-top: 20px;
+    }
+
     #gameOver {
       position: absolute;
       top: 50%;
@@ -81,6 +109,10 @@
 </head>
 <body>
   <div id="title">Leitz Balance Board</div>
+  <div id="startScreen">
+    <button id="startButton">Start</button>
+    <div id="countdown"></div>
+  </div>
   <div id="gameArea">
     <div class="ring" style="width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
     <div class="ring" style="width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
@@ -94,31 +126,18 @@
     const ball = document.getElementById('ball');
     const wind = document.getElementById('wind');
     const gameOver = document.getElementById('gameOver');
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    const countdownEl = document.getElementById('countdown');
+
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
     let speed = 0.5;
-    let active = true;
-    let startTime = Date.now();
-
+    let active = false;
+    let startTime = 0;
     let windForce = {x: 0, y: 0};
     let windActive = false;
-
-    function updateBall() {
-      if (!active) return;
-
-      x += tiltX * speed + windForce.x;
-      y += tiltY * speed + windForce.y;
-
-      if (x < 0 || x > window.innerWidth || y < 0 || y > window.innerHeight) {
-        active = false;
-        gameOver.innerText = `Game Over! Zeit: ${((Date.now() - startTime)/1000).toFixed(1)}s`;
-        gameOver.style.display = 'block';
-        return;
-      }
-
-      ball.style.left = `${x - 40}px`;
-      ball.style.top = `${y - 40}px`;
-    }
+    let gameStarted = false;
 
     let tiltX = 0, tiltY = 0;
     window.addEventListener('deviceorientation', (e) => {
@@ -126,23 +145,68 @@
       tiltY = e.beta || 0;
     });
 
+    startButton.onclick = () => {
+      countdownEl.innerText = '';
+      startButton.style.display = 'none';
+      let count = 3;
+      ball.style.width = '40px';
+      ball.style.height = '40px';
+      ball.style.left = `${x - 20}px`;
+      ball.style.top = `${y - 20}px`;
+      const countdown = setInterval(() => {
+        countdownEl.innerText = count;
+        count--;
+        if (count < 0) {
+          clearInterval(countdown);
+          startScreen.style.display = 'none';
+          active = true;
+          gameStarted = true;
+          startTime = Date.now();
+          requestAnimationFrame(gameLoop);
+        }
+      }, 1000);
+    };
+
+    function updateBall() {
+      if (!active) return;
+
+      x += tiltX * speed + windForce.x;
+      y += tiltY * speed + windForce.y;
+
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const dx = x - cx;
+      const dy = y - cy;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 350) {
+        active = false;
+        gameOver.innerText = `Game Over! Zeit: ${((Date.now() - startTime)/1000).toFixed(1)}s`;
+        gameOver.style.display = 'block';
+        return;
+      }
+
+      ball.style.left = `${x - 20}px`;
+      ball.style.top = `${y - 20}px`;
+    }
+
     function gameLoop() {
-      updateBall();
-      speed += 0.0005;
-      requestAnimationFrame(gameLoop);
+      if (active) {
+        updateBall();
+        speed += 0.0005;
+        requestAnimationFrame(gameLoop);
+      }
     }
 
     function activateWind() {
       if (!active) return;
       windActive = true;
 
-      // zufällige Windrichtung
       const angle = Math.random() * 2 * Math.PI;
-      const strength = 0.6 + Math.random() * 0.6 + speed / 5; // verstärkt
+      const strength = 0.6 + Math.random() * 0.6 + speed / 5;
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
 
-      // Zeige Windkreis visuell
       wind.style.left = `${x - 60}px`;
       wind.style.top = `${y - 60}px`;
       wind.style.display = 'block';
@@ -154,12 +218,9 @@
       }, 2000);
     }
 
-    // Alle 5 Sekunden neue Windböe
     setInterval(() => {
-      if (!windActive) activateWind();
+      if (active && !windActive) activateWind();
     }, 5000);
-
-    requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
