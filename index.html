@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -14,15 +15,31 @@
       text-align: center;
     }
 
+    #title {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    #scores {
+      position: absolute;
+      top: 60px;
+      width: 100%;
+      font-size: 16px;
+      z-index: 10;
+      background: rgba(0,0,0,0.7);
+      padding: 5px 0;
+    }
+
     #gameArea {
       position: absolute;
-      width: 1600px;
-      height: 1600px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
-      border-radius: 50%;
     }
 
     .ring {
@@ -30,22 +47,24 @@
       border: 3px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       pointer-events: none;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
     }
 
     #ball {
       position: absolute;
-      width: 70vw;
-      height: 70vw;
-      max-width: 300px;
-      max-height: 300px;
+      width: 100px;
+      height: 100px;
       background: limegreen;
       border-radius: 50%;
       box-shadow: 0 0 40px limegreen;
       transition: transform 0.1s linear;
       z-index: 2;
+    }
+
+    #initBall {
+      position: absolute;
+      background: limegreen;
+      border-radius: 50%;
+      z-index: 1;
     }
 
     #wind {
@@ -67,30 +86,34 @@
       100% { transform: scale(1.5); opacity: 0; }
     }
 
-    #startButton {
+    #startScreen {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 48px;
-      background: none;
-      color: white;
-      border: none;
-      cursor: pointer;
-      z-index: 10;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
 
-    #scores {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+    #startButton {
       font-size: 24px;
-      z-index: 10;
-      background: rgba(0,0,0,0.7);
-      padding: 10px 20px;
-      border-radius: 10px;
-      line-height: 1.6;
+      padding: 10px 30px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      z-index: 21;
+    }
+
+    #countdown {
+      font-size: 48px;
+      margin-top: 20px;
+      z-index: 21;
     }
 
     #gameOver {
@@ -109,8 +132,8 @@
     }
 
     #restartButton {
-      font-size: 24px;
-      padding: 10px 30px;
+      font-size: 20px;
+      padding: 10px 20px;
       background: limegreen;
       color: black;
       border: none;
@@ -121,14 +144,17 @@
   </style>
 </head>
 <body>
-  <button id="startButton">START</button>
+  <div id="title">Leitz Balance Board</div>
   <div id="scores"></div>
-
+  <div id="startScreen">
+    <button id="startButton">Start</button>
+    <div id="countdown"></div>
+  </div>
   <div id="gameArea">
-    <div class="ring" style="width: 900px; height: 900px;"></div>
-    <div class="ring" style="width: 1200px; height: 1200px;"></div>
-    <div class="ring" style="width: 1500px; height: 1500px;"></div>
-
+    <div id="initBall"></div>
+    <div class="ring" style="width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+    <div class="ring" style="width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+    <div class="ring" style="width: 700px; height: 700px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
     <div id="ball"></div>
     <div id="wind"></div>
     <div id="gameOver">
@@ -139,10 +165,13 @@
 
   <script>
     const ball = document.getElementById('ball');
+    const initBall = document.getElementById('initBall');
     const wind = document.getElementById('wind');
     const gameOver = document.getElementById('gameOver');
     const gameOverText = document.getElementById('gameOverText');
+    const startScreen = document.getElementById('startScreen');
     const startButton = document.getElementById('startButton');
+    const countdownEl = document.getElementById('countdown');
     const restartButton = document.getElementById('restartButton');
     const scoresEl = document.getElementById('scores');
 
@@ -153,8 +182,20 @@
     let startTime = 0;
     let windForce = {x: 0, y: 0};
     let windActive = false;
+    let gameStarted = false;
     let gameDuration = 0;
     let scores = [];
+
+    // Initialer großer Ball
+    function resizeInitBall() {
+      const diameter = Math.min(window.innerWidth, window.innerHeight);
+      initBall.style.width = `${diameter}px`;
+      initBall.style.height = `${diameter}px`;
+      initBall.style.left = `${(window.innerWidth - diameter) / 2}px`;
+      initBall.style.top = `${(window.innerHeight - diameter) / 2}px`;
+    }
+    resizeInitBall();
+    window.addEventListener('resize', resizeInitBall);
 
     let tiltX = 0, tiltY = 0;
     window.addEventListener('deviceorientation', (e) => {
@@ -163,31 +204,36 @@
     });
 
     function startGame() {
+      initBall.style.display = 'none';
+      countdownEl.innerText = '';
       startButton.style.display = 'none';
-      x = window.innerWidth / 2;
-      y = window.innerHeight / 2;
-      updateBallPosition();
-      active = true;
-      startTime = Date.now();
-      requestAnimationFrame(gameLoop);
+      let count = 3;
+      ball.style.left = `${x - 50}px`;
+      ball.style.top = `${y - 50}px`;
+      const countdown = setInterval(() => {
+        countdownEl.innerText = count;
+        count--;
+        if (count < 0) {
+          clearInterval(countdown);
+          startScreen.style.display = 'none';
+          active = true;
+          gameStarted = true;
+          startTime = Date.now();
+          requestAnimationFrame(gameLoop);
+        }
+      }, 1000);
     }
 
     function updateScores() {
-      const topScores = scores.sort((a,b) => b-a).slice(0, 5);
-      scoresEl.innerHTML = 'Bestenliste:<br>' +
-        topScores.map((s, i) => ${i + 1}. ${s.toFixed(1)}s).join('<br>');
-    }
-
-    function updateBallPosition() {
-      ball.style.left = ${x - ball.offsetWidth / 2}px;
-      ball.style.top = ${y - ball.offsetHeight / 2}px;
+      scoresEl.innerHTML = 'Bestenliste: ' + 
+        scores.sort((a,b) => b-a).slice(0, 5).join('s, ') + 's';
     }
 
     function updateBall() {
       if (!active) return;
 
-      gameDuration = (Date.now() - startTime) / 1000;
-
+      gameDuration = (Date.now() - startTime) / 1000; // in seconds
+      
       x += tiltX * speed + windForce.x;
       y += tiltY * speed + windForce.y;
 
@@ -197,17 +243,20 @@
       const dy = y - cy;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance > 750) { // Begrenzung am äußersten Ring (1500px Durchmesser)
+      if (distance > 350) {
         active = false;
         const finalTime = ((Date.now() - startTime)/1000).toFixed(1);
-        gameOverText.innerText = Game Over! Zeit: ${finalTime}s;
+        gameOverText.innerText = `Game Over! Zeit: ${finalTime}s`;
         gameOver.style.display = 'flex';
+        
+        // Score speichern
         scores.push(parseFloat(finalTime));
         updateScores();
         return;
       }
 
-      updateBallPosition();
+      ball.style.left = `${x - 50}px`;
+      ball.style.top = `${y - 50}px`;
     }
 
     function gameLoop() {
@@ -223,13 +272,14 @@
       windActive = true;
 
       const angle = Math.random() * 2 * Math.PI;
+      // Wind strength increases with game duration
       const baseStrength = 0.8 + (gameDuration / 30); 
       const strength = baseStrength + Math.random() * baseStrength + speed / 3;
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
 
-      wind.style.left = ${x - 75}px;
-      wind.style.top = ${y - 75}px;
+      wind.style.left = `${x - 75}px`;
+      wind.style.top = `${y - 75}px`;
       wind.style.display = 'block';
 
       setTimeout(() => {
@@ -240,21 +290,23 @@
     }
 
     startButton.onclick = startGame;
-
+    
     restartButton.onclick = () => {
       gameOver.style.display = 'none';
       x = window.innerWidth / 2;
       y = window.innerHeight / 2;
       speed = 0.5;
-      updateBallPosition();
+      ball.style.left = `${x - 50}px`;
+      ball.style.top = `${y - 50}px`;
       active = true;
+      gameStarted = true;
       startTime = Date.now();
       requestAnimationFrame(gameLoop);
     };
 
     setInterval(() => {
       if (active && !windActive) activateWind();
-    }, 3000);
+    }, 3000); // More frequent wind changes
   </script>
 </body>
 </html>
