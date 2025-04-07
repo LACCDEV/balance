@@ -14,9 +14,18 @@
       text-align: center;
     }
 
-    #scores {
+    #title {
       position: absolute;
       top: 20px;
+      width: 100%;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    #scores {
+      position: absolute;
+      top: 60px;
       width: 100%;
       font-size: 24px;
       z-index: 10;
@@ -32,7 +41,6 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      z-index: 1;
     }
 
     .ring {
@@ -47,13 +55,16 @@
 
     #ball {
       position: absolute;
-      width: 100px;
-      height: 100px;
+      width: 70vw;
+      height: 70vw;
       background: limegreen;
       border-radius: 50%;
       box-shadow: 0 0 40px limegreen;
-      transition: transform 0.1s linear;
+      transition: all 0.5s ease;
       z-index: 2;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     #wind {
@@ -81,24 +92,24 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 32px;
-      padding: 15px 50px;
+      padding: 15px 40px;
       background: white;
       color: black;
       border: none;
-      border-radius: 16px;
+      border-radius: 12px;
       cursor: pointer;
-      box-shadow: 0 0 30px limegreen;
-      z-index: 5;
+      z-index: 21;
+      box-shadow: 0 0 20px limegreen;
     }
 
     #countdown {
       position: absolute;
-      top: 50%;
+      top: 60%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       font-size: 64px;
-      z-index: 6;
       color: white;
+      z-index: 22;
       display: none;
     }
 
@@ -130,11 +141,13 @@
   </style>
 </head>
 <body>
-
+  <div id="title">Leitz Balance Board</div>
   <div id="scores"></div>
 
+  <button id="startButton">Start</button>
+  <div id="countdown"></div>
+
   <div id="gameArea">
-    <!-- Ringe im Spielbereich -->
     <div class="ring" style="width: 900px; height: 900px;"></div>
     <div class="ring" style="width: 1200px; height: 1200px;"></div>
     <div class="ring" style="width: 1500px; height: 1500px;"></div>
@@ -146,9 +159,6 @@
       <button id="restartButton">Nochmal spielen</button>
     </div>
   </div>
-
-  <button id="startButton">Start</button>
-  <div id="countdown"></div>
 
   <script>
     const ball = document.getElementById('ball');
@@ -181,9 +191,14 @@
       countdownEl.style.display = 'block';
       startButton.style.display = 'none';
 
+      // Ball initial groß & zentriert
+      ball.style.width = '70vw';
+      ball.style.height = '70vw';
+      ball.style.left = '50%';
+      ball.style.top = '50%';
+      ball.style.transform = 'translate(-50%, -50%)';
+
       let count = 3;
-      ball.style.left = `${x - 50}px`;
-      ball.style.top = `${y - 50}px`;
       const countdown = setInterval(() => {
         countdownEl.innerText = count;
         count--;
@@ -191,6 +206,13 @@
           clearInterval(countdown);
           countdownEl.style.display = 'none';
           scoresEl.style.display = 'block';
+
+          // Ball klein machen fürs Spiel
+          ball.style.width = '100px';
+          ball.style.height = '100px';
+          x = window.innerWidth / 2;
+          y = window.innerHeight / 2;
+
           active = true;
           startTime = Date.now();
           requestAnimationFrame(gameLoop);
