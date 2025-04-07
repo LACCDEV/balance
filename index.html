@@ -33,15 +33,15 @@
 
     .ring {
       position: absolute;
-      border: 2px solid rgba(255, 255, 255, 0.1);
+      border: 3px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       pointer-events: none;
     }
 
     #ball {
       position: absolute;
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       background: limegreen;
       border-radius: 50%;
       box-shadow: 0 0 40px limegreen;
@@ -51,11 +51,11 @@
 
     #wind {
       position: absolute;
-      width: 120px;
-      height: 120px;
-      background: rgba(0,255,255,0.1);
+      width: 150px;
+      height: 150px;
+      background: rgba(0,255,255,0.2);
       border-radius: 50%;
-      border: 2px solid cyan;
+      border: 3px solid cyan;
       pointer-events: none;
       transition: transform 0.3s ease;
       animation: pulse 1s infinite;
@@ -73,7 +73,7 @@
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      background: black;
+      background: limegreen;
       z-index: 20;
       display: flex;
       flex-direction: column;
@@ -84,16 +84,18 @@
     #startButton {
       font-size: 24px;
       padding: 10px 30px;
-      background: limegreen;
+      background: white;
       color: black;
       border: none;
       border-radius: 12px;
       cursor: pointer;
+      z-index: 21;
     }
 
     #countdown {
       font-size: 48px;
       margin-top: 20px;
+      z-index: 21;
     }
 
     #gameOver {
@@ -138,6 +140,7 @@
     let windForce = {x: 0, y: 0};
     let windActive = false;
     let gameStarted = false;
+    let gameDuration = 0;
 
     let tiltX = 0, tiltY = 0;
     window.addEventListener('deviceorientation', (e) => {
@@ -145,14 +148,26 @@
       tiltY = e.beta || 0;
     });
 
+    // Initialize with large green ball in background
+    ball.style.width = '100%';
+    ball.style.height = '100%';
+    ball.style.left = '0';
+    ball.style.top = '0';
+    ball.style.borderRadius = '0';
+    ball.style.boxShadow = 'none';
+
     startButton.onclick = () => {
+      // Reset ball to normal size
+      ball.style.width = '100px';
+      ball.style.height = '100px';
+      ball.style.borderRadius = '50%';
+      ball.style.boxShadow = '0 0 40px limegreen';
+      
       countdownEl.innerText = '';
       startButton.style.display = 'none';
       let count = 3;
-      ball.style.width = '40px';
-      ball.style.height = '40px';
-      ball.style.left = `${x - 20}px`;
-      ball.style.top = `${y - 20}px`;
+      ball.style.left = `${x - 50}px`;
+      ball.style.top = `${y - 50}px`;
       const countdown = setInterval(() => {
         countdownEl.innerText = count;
         count--;
@@ -170,6 +185,8 @@
     function updateBall() {
       if (!active) return;
 
+      gameDuration = (Date.now() - startTime) / 1000; // in seconds
+      
       x += tiltX * speed + windForce.x;
       y += tiltY * speed + windForce.y;
 
@@ -186,8 +203,8 @@
         return;
       }
 
-      ball.style.left = `${x - 20}px`;
-      ball.style.top = `${y - 20}px`;
+      ball.style.left = `${x - 50}px`;
+      ball.style.top = `${y - 50}px`;
     }
 
     function gameLoop() {
@@ -203,12 +220,14 @@
       windActive = true;
 
       const angle = Math.random() * 2 * Math.PI;
-      const strength = 0.6 + Math.random() * 0.6 + speed / 5;
+      // Wind strength increases with game duration
+      const baseStrength = 0.8 + (gameDuration / 30); 
+      const strength = baseStrength + Math.random() * baseStrength + speed / 3;
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
 
-      wind.style.left = `${x - 60}px`;
-      wind.style.top = `${y - 60}px`;
+      wind.style.left = `${x - 75}px`;
+      wind.style.top = `${y - 75}px`;
       wind.style.display = 'block';
 
       setTimeout(() => {
@@ -220,7 +239,7 @@
 
     setInterval(() => {
       if (active && !windActive) activateWind();
-    }, 5000);
+    }, 3000); // More frequent wind changes
   </script>
 </body>
 </html>
