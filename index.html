@@ -12,12 +12,16 @@
       color: white;
       font-family: sans-serif;
       text-align: center;
+      width: 100%;
+      height: 100%;
     }
 
     #gameArea {
       position: absolute;
-      width: 1600px;
-      height: 1600px;
+      width: 100vmin;
+      height: 100vmin;
+      max-width: 1600px;
+      max-height: 1600px;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -37,16 +41,15 @@
 
     #ball {
       position: absolute;
-      width: 70vw;
-      height: 70vw;
+      width: 30vmin;
+      height: 30vmin;
       max-width: 300px;
       max-height: 300px;
       background: limegreen;
       border-radius: 50%;
       box-shadow: 0 0 40px limegreen;
-      transition: transform 0.1s linear;
+      transition: transform 0.3s ease;
       z-index: 2;
-      transform: scale(1);
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) scale(1.5);
@@ -140,9 +143,9 @@
   <div id="scores"></div>
 
   <div id="gameArea">
-    <div class="ring" style="width: 900px; height: 900px;"></div>
-    <div class="ring" style="width: 1200px; height: 1200px;"></div>
-    <div class="ring" style="width: 1500px; height: 1500px;"></div>
+    <div class="ring" style="width: 60%; height: 60%;"></div>
+    <div class="ring" style="width: 80%; height: 80%;"></div>
+    <div class="ring" style="width: 100%; height: 100%;"></div>
 
     <div id="ball"></div>
     <div id="wind"></div>
@@ -161,6 +164,7 @@
     const countdownEl = document.getElementById('countdown');
     const restartButton = document.getElementById('restartButton');
     const scoresEl = document.getElementById('scores');
+    const gameArea = document.getElementById('gameArea');
 
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
@@ -178,6 +182,26 @@
       tiltY = e.beta || 0;
     });
 
+    function centerGameElements() {
+      // Center game area and ball
+      gameArea.style.width = Math.min(window.innerWidth, window.innerHeight, 1600) + 'px';
+      gameArea.style.height = gameArea.style.width;
+      
+      // Update ball size based on game area
+      const ballSize = Math.min(window.innerWidth, window.innerHeight) * 0.3;
+      ball.style.width = ballSize + 'px';
+      ball.style.height = ballSize + 'px';
+      
+      // Reset ball position
+      x = window.innerWidth / 2;
+      y = window.innerHeight / 2;
+      updateBallPosition();
+    }
+
+    // Initial centering
+    centerGameElements();
+    window.addEventListener('resize', centerGameElements);
+
     function startGame() {
       startButton.style.display = 'none';
 
@@ -186,14 +210,11 @@
       countdownEl.innerText = count;
       countdownEl.style.display = 'block';
 
-      // Verkleinungsanimation vorbereiten
-      ball.style.transition = 'transform 0.3s ease';
-
       const countdownInterval = setInterval(() => {
         count--;
         if (count > 0) {
           countdownEl.innerText = count;
-          const scale = 1.5 - (3 - count) * 0.3; // Startet bei 1.5 und verkleinert sich
+          const scale = 1.5 - (3 - count) * 0.3; // Glatte Verkleinerung von 1.5 auf 0.6
           ball.style.transform = `translate(-50%, -50%) scale(${scale})`;
         } else {
           clearInterval(countdownInterval);
@@ -221,8 +242,9 @@
     }
 
     function updateBallPosition() {
-      ball.style.left = `${x - ball.offsetWidth / 2}px`;
-      ball.style.top = `${y - ball.offsetHeight / 2}px`;
+      ball.style.left = `${x}px`;
+      ball.style.top = `${y}px`;
+      ball.style.transformOrigin = 'center';
     }
 
     function updateBall() {
@@ -238,8 +260,9 @@
       const dx = x - cx;
       const dy = y - cy;
       const distance = Math.sqrt(dx * dx + dy * dy);
+      const maxDistance = Math.min(window.innerWidth, window.innerHeight) * 0.5;
 
-      if (distance > 750) {
+      if (distance > maxDistance) {
         active = false;
         const finalTime = ((Date.now() - startTime)/1000).toFixed(1);
         gameOverText.innerText = `Game Over! Zeit: ${finalTime}s`;
@@ -292,10 +315,8 @@
       ball.style.transition = 'transform 0.3s ease';
       updateBallPosition();
       active = false;
+      startButton.style.display = 'block';
     };
-
-    // Initial position the ball in center
-    updateBallPosition();
 
     setInterval(() => {
       if (active && !windActive) activateWind();
