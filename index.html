@@ -27,10 +27,11 @@
       position: absolute;
       top: 60px;
       width: 100%;
-      font-size: 16px;
+      font-size: 24px;
       z-index: 10;
       background: rgba(0,0,0,0.7);
-      padding: 5px 0;
+      padding: 10px 0;
+      line-height: 1.6;
     }
 
     #gameArea {
@@ -63,7 +64,9 @@
       position: absolute;
       background: limegreen;
       border-radius: 50%;
-      z-index: 1;
+      z-index: 0;
+      opacity: 0.3;
+      pointer-events: none;
     }
 
     #wind {
@@ -93,24 +96,34 @@
       background: rgba(0,0,0,0.8);
       z-index: 20;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
+    }
+
+    #startContent {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 21;
+      position: relative;
     }
 
     #startButton {
-      font-size: 24px;
-      padding: 10px 30px;
+      font-size: 32px;
+      padding: 15px 40px;
       background: white;
       color: black;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       z-index: 21;
+      box-shadow: 0 0 20px limegreen;
     }
 
     #countdown {
-      font-size: 48px;
+      font-size: 64px;
       margin-top: 20px;
       z-index: 21;
     }
@@ -131,8 +144,8 @@
     }
 
     #restartButton {
-      font-size: 20px;
-      padding: 10px 20px;
+      font-size: 24px;
+      padding: 10px 30px;
       background: limegreen;
       color: black;
       border: none;
@@ -145,12 +158,16 @@
 <body>
   <div id="title">Leitz Balance Board</div>
   <div id="scores"></div>
+
   <div id="startScreen">
-    <button id="startButton">Start</button>
-    <div id="countdown"></div>
-  </div>
-  <div id="gameArea">
     <div id="initBall"></div>
+    <div id="startContent">
+      <button id="startButton">Start</button>
+      <div id="countdown"></div>
+    </div>
+  </div>
+
+  <div id="gameArea">
     <div class="ring" style="width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
     <div class="ring" style="width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
     <div class="ring" style="width: 700px; height: 700px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
@@ -185,7 +202,6 @@
     let gameDuration = 0;
     let scores = [];
 
-    // Initialer großer Ball
     function resizeInitBall() {
       const diameter = Math.min(window.innerWidth, window.innerHeight);
       initBall.style.width = `${diameter}px`;
@@ -224,14 +240,15 @@
     }
 
     function updateScores() {
-      scoresEl.innerHTML = 'Bestenliste: ' + 
-        scores.sort((a,b) => b-a).slice(0, 5).join('s, ') + 's';
+      const topScores = scores.sort((a,b) => b-a).slice(0, 5);
+      scoresEl.innerHTML = 'Bestenliste:<br>' +
+        topScores.map((s, i) => `${i + 1}. ${s.toFixed(1)}s`).join('<br>');
     }
 
     function updateBall() {
       if (!active) return;
 
-      gameDuration = (Date.now() - startTime) / 1000; // in seconds
+      gameDuration = (Date.now() - startTime) / 1000;
       
       x += tiltX * speed + windForce.x;
       y += tiltY * speed + windForce.y;
@@ -248,7 +265,6 @@
         gameOverText.innerText = `Game Over! Zeit: ${finalTime}s`;
         gameOver.style.display = 'flex';
         
-        // Score speichern
         scores.push(parseFloat(finalTime));
         updateScores();
         return;
@@ -271,7 +287,6 @@
       windActive = true;
 
       const angle = Math.random() * 2 * Math.PI;
-      // Wind strength increases with game duration
       const baseStrength = 0.8 + (gameDuration / 30); 
       const strength = baseStrength + Math.random() * baseStrength + speed / 3;
       windForce.x = Math.cos(angle) * strength;
@@ -305,7 +320,7 @@
 
     setInterval(() => {
       if (active && !windActive) activateWind();
-    }, 3000); // More frequent wind changes
+    }, 3000);
   </script>
 </body>
 </html>
