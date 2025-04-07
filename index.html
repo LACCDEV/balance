@@ -14,24 +14,16 @@
       text-align: center;
     }
 
-    #title {
-      position: absolute;
-      top: 20px;
-      width: 100%;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 10;
-    }
-
     #scores {
       position: absolute;
-      top: 60px;
+      top: 20px;
       width: 100%;
       font-size: 24px;
       z-index: 10;
       background: rgba(0,0,0,0.7);
       padding: 10px 0;
       line-height: 1.6;
+      display: none;
     }
 
     #gameArea {
@@ -87,7 +79,7 @@
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: black;
       z-index: 20;
       display: flex;
       justify-content: center;
@@ -104,22 +96,37 @@
       position: relative;
     }
 
+    #startVisual {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    #bigBall {
+      width: 250px;
+      height: 250px;
+      background: limegreen;
+      border-radius: 50%;
+      box-shadow: 0 0 80px 30px limegreen;
+    }
+
     #startButton {
       font-size: 32px;
-      padding: 15px 40px;
+      padding: 15px 50px;
       background: white;
       color: black;
       border: none;
-      border-radius: 12px;
+      border-radius: 16px;
       cursor: pointer;
-      z-index: 21;
-      box-shadow: 0 0 20px limegreen;
+      box-shadow: 0 0 30px limegreen;
     }
 
     #countdown {
       font-size: 64px;
       margin-top: 20px;
       z-index: 21;
+      color: white;
     }
 
     #gameOver {
@@ -150,18 +157,21 @@
   </style>
 </head>
 <body>
-  <div id="title">Leitz Balance Board</div>
+
   <div id="scores"></div>
 
   <div id="startScreen">
     <div id="startContent">
-      <button id="startButton">Start</button>
+      <div id="startVisual">
+        <div id="bigBall"></div>
+        <button id="startButton">Start</button>
+      </div>
       <div id="countdown"></div>
     </div>
   </div>
 
   <div id="gameArea">
-    <!-- Zentrierte und große Ringe -->
+    <!-- Ringe im Spielbereich -->
     <div class="ring" style="width: 900px; height: 900px;"></div>
     <div class="ring" style="width: 1200px; height: 1200px;"></div>
     <div class="ring" style="width: 1500px; height: 1500px;"></div>
@@ -204,6 +214,8 @@
     function startGame() {
       countdownEl.innerText = '';
       startButton.style.display = 'none';
+      document.getElementById('bigBall').style.display = 'none';
+
       let count = 3;
       ball.style.left = `${x - 50}px`;
       ball.style.top = `${y - 50}px`;
@@ -213,6 +225,7 @@
         if (count < 0) {
           clearInterval(countdown);
           startScreen.style.display = 'none';
+          scoresEl.style.display = 'block';
           active = true;
           startTime = Date.now();
           requestAnimationFrame(gameLoop);
@@ -230,7 +243,7 @@
       if (!active) return;
 
       gameDuration = (Date.now() - startTime) / 1000;
-      
+
       x += tiltX * speed + windForce.x;
       y += tiltY * speed + windForce.y;
 
@@ -267,7 +280,7 @@
       windActive = true;
 
       const angle = Math.random() * 2 * Math.PI;
-      const baseStrength = 0.8 + (gameDuration / 30); 
+      const baseStrength = 0.8 + (gameDuration / 30);
       const strength = baseStrength + Math.random() * baseStrength + speed / 3;
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
