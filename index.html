@@ -175,12 +175,12 @@
     function updateScores() {
       const topScores = scores.sort((a,b) => b-a).slice(0, 5);
       scoresEl.innerHTML = 'Bestenliste:<br>' +
-        topScores.map((s, i) => `${i + 1}. ${s.toFixed(1)}s`).join('<br>');
+        topScores.map((s, i) => ${i + 1}. ${s.toFixed(1)}s).join('<br>');
     }
 
     function updateBallPosition() {
-      ball.style.left = `${x - ball.offsetWidth / 2}px`;
-      ball.style.top = `${y - ball.offsetHeight / 2}px`;
+      ball.style.left = ${x - ball.offsetWidth / 2}px;
+      ball.style.top = ${y - ball.offsetHeight / 2}px;
     }
 
     function updateBall() {
@@ -200,7 +200,7 @@
       if (distance > 750) { // Begrenzung am äußersten Ring (1500px Durchmesser)
         active = false;
         const finalTime = ((Date.now() - startTime)/1000).toFixed(1);
-        gameOverText.innerText = `Game Over! Zeit: ${finalTime}s`;
+        gameOverText.innerText = Game Over! Zeit: ${finalTime}s;
         gameOver.style.display = 'flex';
         scores.push(parseFloat(finalTime));
         updateScores();
@@ -228,8 +228,8 @@
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
 
-      wind.style.left = `${x - 75}px`;
-      wind.style.top = `${y - 75}px`;
+      wind.style.left = ${x - 75}px;
+      wind.style.top = ${y - 75}px;
       wind.style.display = 'block';
 
       setTimeout(() => {
