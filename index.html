@@ -46,10 +46,6 @@
       box-shadow: 0 0 40px limegreen;
       transition: transform 0.1s linear;
       z-index: 2;
-      transform: scale(1);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(1.5);
     }
 
     #wind {
@@ -82,16 +78,6 @@
       border: none;
       cursor: pointer;
       z-index: 10;
-    }
-
-    #countdown {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 72px;
-      z-index: 11;
-      display: none;
     }
 
     #scores {
@@ -136,7 +122,6 @@
 </head>
 <body>
   <button id="startButton">START</button>
-  <div id="countdown"></div>
   <div id="scores"></div>
 
   <div id="gameArea">
@@ -158,7 +143,6 @@
     const gameOver = document.getElementById('gameOver');
     const gameOverText = document.getElementById('gameOverText');
     const startButton = document.getElementById('startButton');
-    const countdownEl = document.getElementById('countdown');
     const restartButton = document.getElementById('restartButton');
     const scoresEl = document.getElementById('scores');
 
@@ -180,38 +164,12 @@
 
     function startGame() {
       startButton.style.display = 'none';
-
-      // Zeige Countdown
-      let count = 3;
-      countdownEl.innerText = count;
-      countdownEl.style.display = 'block';
-
-      // Verkleinungsanimation vorbereiten
-      ball.style.transition = 'transform 0.3s ease';
-
-      const countdownInterval = setInterval(() => {
-        count--;
-        if (count > 0) {
-          countdownEl.innerText = count;
-          const scale = 1.5 - (3 - count) * 0.3; // Startet bei 1.5 und verkleinert sich
-          ball.style.transform = translate(-50%, -50%) scale(${scale});
-        } else {
-          clearInterval(countdownInterval);
-          countdownEl.style.display = 'none';
-
-          // Setze Ball auf Spielgröße
-          ball.style.transform = 'translate(-50%, -50%) scale(0.4)';
-          ball.style.transition = 'transform 0.1s linear';
-
-          // Starte das Spiel
-          x = window.innerWidth / 2;
-          y = window.innerHeight / 2;
-          updateBallPosition();
-          active = true;
-          startTime = Date.now();
-          requestAnimationFrame(gameLoop);
-        }
-      }, 1000);
+      x = window.innerWidth / 2;
+      y = window.innerHeight / 2;
+      updateBallPosition();
+      active = true;
+      startTime = Date.now();
+      requestAnimationFrame(gameLoop);
     }
 
     function updateScores() {
@@ -239,7 +197,7 @@
       const dy = y - cy;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance > 750) {
+      if (distance > 750) { // Begrenzung am äußersten Ring (1500px Durchmesser)
         active = false;
         const finalTime = ((Date.now() - startTime)/1000).toFixed(1);
         gameOverText.innerText = Game Over! Zeit: ${finalTime}s;
@@ -288,14 +246,11 @@
       x = window.innerWidth / 2;
       y = window.innerHeight / 2;
       speed = 0.5;
-      ball.style.transform = 'translate(-50%, -50%) scale(1.5)';
-      ball.style.transition = 'transform 0.3s ease';
       updateBallPosition();
-      active = false;
+      active = true;
+      startTime = Date.now();
+      requestAnimationFrame(gameLoop);
     };
-
-    // Initial position the ball in center
-    updateBallPosition();
 
     setInterval(() => {
       if (active && !windActive) activateWind();
