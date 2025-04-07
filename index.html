@@ -46,6 +46,14 @@
       box-shadow: 0 0 40px limegreen;
       transition: transform 0.1s linear;
       z-index: 2;
+      /* Startgröße: 10% kleiner als der kleinste Ring (900px) */
+      transform: translate(-50%, -50%) scale(0.9);
+      top: 50%;
+      left: 50%;
+    }
+
+    #ball.normal-size {
+      transform: translate(-50%, -50%) scale(1);
     }
 
     #wind {
@@ -166,6 +174,7 @@
       startButton.style.display = 'none';
       x = window.innerWidth / 2;
       y = window.innerHeight / 2;
+      ball.classList.add('normal-size'); // Füge die Klasse für normale Größe hinzu
       updateBallPosition();
       active = true;
       startTime = Date.now();
@@ -246,6 +255,7 @@
       x = window.innerWidth / 2;
       y = window.innerHeight / 2;
       speed = 0.5;
+      ball.classList.add('normal-size'); // Stelle sicher, dass der Ball normale Größe hat
       updateBallPosition();
       active = true;
       startTime = Date.now();
