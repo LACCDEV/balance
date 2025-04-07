@@ -47,6 +47,9 @@
       border: 3px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       pointer-events: none;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
     #ball {
@@ -58,15 +61,6 @@
       box-shadow: 0 0 40px limegreen;
       transition: transform 0.1s linear;
       z-index: 2;
-    }
-
-    #initBall {
-      position: absolute;
-      background: limegreen;
-      border-radius: 50%;
-      z-index: 0;
-      opacity: 0.3;
-      pointer-events: none;
     }
 
     #wind {
@@ -160,7 +154,6 @@
   <div id="scores"></div>
 
   <div id="startScreen">
-    <div id="initBall"></div>
     <div id="startContent">
       <button id="startButton">Start</button>
       <div id="countdown"></div>
@@ -168,9 +161,11 @@
   </div>
 
   <div id="gameArea">
-    <div class="ring" style="width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-    <div class="ring" style="width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-    <div class="ring" style="width: 700px; height: 700px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+    <!-- Zentrierte und große Ringe -->
+    <div class="ring" style="width: 900px; height: 900px;"></div>
+    <div class="ring" style="width: 1200px; height: 1200px;"></div>
+    <div class="ring" style="width: 1500px; height: 1500px;"></div>
+
     <div id="ball"></div>
     <div id="wind"></div>
     <div id="gameOver">
@@ -181,7 +176,6 @@
 
   <script>
     const ball = document.getElementById('ball');
-    const initBall = document.getElementById('initBall');
     const wind = document.getElementById('wind');
     const gameOver = document.getElementById('gameOver');
     const gameOverText = document.getElementById('gameOverText');
@@ -198,19 +192,8 @@
     let startTime = 0;
     let windForce = {x: 0, y: 0};
     let windActive = false;
-    let gameStarted = false;
     let gameDuration = 0;
     let scores = [];
-
-    function resizeInitBall() {
-      const diameter = Math.min(window.innerWidth, window.innerHeight);
-      initBall.style.width = `${diameter}px`;
-      initBall.style.height = `${diameter}px`;
-      initBall.style.left = `${(window.innerWidth - diameter) / 2}px`;
-      initBall.style.top = `${(window.innerHeight - diameter) / 2}px`;
-    }
-    resizeInitBall();
-    window.addEventListener('resize', resizeInitBall);
 
     let tiltX = 0, tiltY = 0;
     window.addEventListener('deviceorientation', (e) => {
@@ -219,7 +202,6 @@
     });
 
     function startGame() {
-      initBall.style.display = 'none';
       countdownEl.innerText = '';
       startButton.style.display = 'none';
       let count = 3;
@@ -232,7 +214,6 @@
           clearInterval(countdown);
           startScreen.style.display = 'none';
           active = true;
-          gameStarted = true;
           startTime = Date.now();
           requestAnimationFrame(gameLoop);
         }
@@ -259,12 +240,11 @@
       const dy = y - cy;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance > 350) {
+      if (distance > 400) {
         active = false;
         const finalTime = ((Date.now() - startTime)/1000).toFixed(1);
         gameOverText.innerText = `Game Over! Zeit: ${finalTime}s`;
         gameOver.style.display = 'flex';
-        
         scores.push(parseFloat(finalTime));
         updateScores();
         return;
@@ -304,7 +284,7 @@
     }
 
     startButton.onclick = startGame;
-    
+
     restartButton.onclick = () => {
       gameOver.style.display = 'none';
       x = window.innerWidth / 2;
@@ -313,7 +293,6 @@
       ball.style.left = `${x - 50}px`;
       ball.style.top = `${y - 50}px`;
       active = true;
-      gameStarted = true;
       startTime = Date.now();
       requestAnimationFrame(gameLoop);
     };
