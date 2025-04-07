@@ -1,184 +1,151 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Leitz Balance Board</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background: #111;
+      overflow: hidden;
+      background: black;
       color: white;
       font-family: sans-serif;
-      overflow: hidden;
+      text-align: center;
     }
-    #gameContainer {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #gameArea {
-      position: relative;
-      width: 90vmin;
-      height: 90vmin;
-      background: radial-gradient(circle, #222 60%, #000);
-      border-radius: 50%;
-      overflow: hidden;
-    }
-    .ring {
-      position: absolute;
-      border: 1px solid #444;
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    #ball {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      background: #32ff00;
-      border-radius: 50%;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px #32ff00aa;
-    }
-    #startButton, #retryButton {
+
+    #title {
       position: absolute;
       top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      font-size: 1.2em;
-      background: #32ff00;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      z-index: 2;
+      width: 100%;
+      font-size: 24px;
+      font-weight: bold;
     }
-    #timer {
+
+    #gameArea {
       position: absolute;
-      bottom: 20px;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #ball {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: limegreen;
+      border-radius: 50%;
+      box-shadow: 0 0 30px limegreen;
+      transition: transform 0.1s linear;
+    }
+
+    #wind {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: rgba(0,255,255,0.1);
+      border-radius: 50%;
+      border: 2px solid cyan;
+      pointer-events: none;
+      transition: transform 0.3s ease;
+      animation: pulse 1s infinite;
+      display: none;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.5em;
-      color: white;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div id="gameContainer">
-    <div id="gameArea">
-      <div id="ball"></div>
-      <div id="timer">0.00s</div>
-      <button id="startButton">Start</button>
-      <button id="retryButton" style="display: none;">Erneut versuchen</button>
-    </div>
+  <div id="title">Leitz Balance Board</div>
+  <div id="gameArea">
+    <div id="ball"></div>
+    <div id="wind"></div>
+    <div id="gameOver"></div>
   </div>
 
   <script>
-    const ball = document.getElementById("ball");
-    const startButton = document.getElementById("startButton");
-    const retryButton = document.getElementById("retryButton");
-    const timer = document.getElementById("timer");
-    const gameArea = document.getElementById("gameArea");
-
-    const maxX = gameArea.clientWidth - 40;
-    const maxY = gameArea.clientHeight - 40;
-    let x = maxX / 2;
-    let y = maxY / 2;
+    const ball = document.getElementById('ball');
+    const wind = document.getElementById('wind');
+    const gameOver = document.getElementById('gameOver');
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
     let speed = 0.5;
-    let startTime;
-    let timerInterval;
-    let levelInterval;
-    let gameRunning = false;
+    let active = true;
+    let startTime = Date.now();
 
-    function updateBall(gamma, beta) {
-      x += gamma * speed;
-      y += beta * speed;
-      x = Math.max(0, Math.min(maxX, x));
-      y = Math.max(0, Math.min(maxY, y));
-      ball.style.left = x + "px";
-      ball.style.top = y + "px";
+    let windForce = {x: 0, y: 0};
+    let windActive = false;
 
-      // Game Over, wenn Ball an den Rand kommt
-      if (x <= 0 || x >= maxX || y <= 0 || y >= maxY) {
-        gameOver();
+    function updateBall() {
+      if (!active) return;
+
+      x += tiltX * speed + windForce.x;
+      y += tiltY * speed + windForce.y;
+
+      if (x < 0 || x > window.innerWidth || y < 0 || y > window.innerHeight) {
+        active = false;
+        gameOver.innerText = `Game Over! Zeit: ${((Date.now() - startTime)/1000).toFixed(1)}s`;
+        gameOver.style.display = 'block';
+        return;
       }
+
+      ball.style.left = `${x - 25}px`;
+      ball.style.top = `${y - 25}px`;
     }
 
-    function gameOver() {
-      gameRunning = false;
-      window.removeEventListener("deviceorientation", orientationHandler);
-      clearInterval(timerInterval);
-      clearInterval(levelInterval);
-      retryButton.style.display = "block";
+    let tiltX = 0, tiltY = 0;
+    window.addEventListener('deviceorientation', (e) => {
+      tiltX = e.gamma || 0;
+      tiltY = e.beta || 0;
+    });
+
+    function gameLoop() {
+      updateBall();
+      speed += 0.0005;
+      requestAnimationFrame(gameLoop);
     }
 
-    function startGame() {
-      x = maxX / 2;
-      y = maxY / 2;
-      speed = 0.5;
-      gameRunning = true;
-      retryButton.style.display = "none";
-      startButton.style.display = "none";
-      ball.style.left = x + "px";
-      ball.style.top = y + "px";
+    function activateWind() {
+      if (!active) return;
+      windActive = true;
 
-      startTime = Date.now();
-      timerInterval = setInterval(() => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-        timer.textContent = `${elapsed}s`;
-      }, 50);
+      // zufällige Windrichtung
+      const angle = Math.random() * 2 * Math.PI;
+      const strength = 0.3 + Math.random() * 0.3 + speed / 10;
+      windForce.x = Math.cos(angle) * strength;
+      windForce.y = Math.sin(angle) * strength;
 
-      levelInterval = setInterval(() => {
-        speed += 0.1;
-      }, 3000); // alle 3 Sekunden wird's schwieriger
+      // Zeige Windkreis visuell
+      wind.style.left = `${x - 50}px`;
+      wind.style.top = `${y - 50}px`;
+      wind.style.display = 'block';
 
-      window.addEventListener("deviceorientation", orientationHandler);
+      setTimeout(() => {
+        windForce = {x: 0, y: 0};
+        wind.style.display = 'none';
+        windActive = false;
+      }, 2000);
     }
 
-    function orientationHandler(event) {
-      if (!gameRunning) return;
-      const gamma = event.gamma || 0;
-      const beta = event.beta || 0;
-      updateBall(gamma, beta);
-    }
+    // Alle 5 Sekunden neue Windböe
+    setInterval(() => {
+      if (!windActive) activateWind();
+    }, 5000);
 
-    async function requestPermissionAndStart() {
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        try {
-          const permissionState = await DeviceOrientationEvent.requestPermission();
-          if (permissionState === 'granted') {
-            startGame();
-          } else {
-            alert("Sensorzugriff verweigert.");
-          }
-        } catch (e) {
-          alert("Fehler beim Anfragen des Sensorzugriffs.");
-        }
-      } else {
-        startGame();
-      }
-    }
-
-    startButton.addEventListener("click", requestPermissionAndStart);
-    retryButton.addEventListener("click", requestPermissionAndStart);
-
-    // Ringe zeichnen
-    for (let i = 1; i <= 5; i++) {
-      const ring = document.createElement("div");
-      ring.className = "ring";
-      const size = 100 + i * 100;
-      ring.style.width = `${size}px`;
-      ring.style.height = `${size}px`;
-      ring.style.left = `calc(50% - ${size / 2}px)`;
-      ring.style.top = `calc(50% - ${size / 2}px)`;
-      gameArea.appendChild(ring);
-    }
+    requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
