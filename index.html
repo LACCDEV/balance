@@ -48,8 +48,9 @@
   z-index: 2;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(1.5);
+  transform: translate(-50%, -50%);
 }
+
 
     #wind {
       position: absolute;
@@ -177,41 +178,42 @@
       tiltY = e.beta || 0;
     });
 
-    function startGame() {
-      startButton.style.display = 'none';
+function startGame() {
+  startButton.style.display = 'none';
 
-      // Zeige Countdown
-      let count = 3;
+  // Zeige Countdown
+  let count = 3;
+  countdownEl.innerText = count;
+  countdownEl.style.display = 'block';
+
+  // Verkleinungsanimation vorbereiten
+  ball.style.transition = 'transform 0.3s ease';
+
+  const countdownInterval = setInterval(() => {
+    count--;
+    if (count > 0) {
       countdownEl.innerText = count;
-      countdownEl.style.display = 'block';
+      const scale = 1.5 - (3 - count) * 0.3; // Startet bei 1.5 und verkleinert sich
+      ball.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    } else {
+      clearInterval(countdownInterval);
+      countdownEl.style.display = 'none';
 
-      // Verkleinungsanimation vorbereiten
-      ball.style.transition = 'transform 0.3s ease';
+      // Setze Ball auf Spielgröße
+      ball.style.transform = 'translate(-50%, -50%) scale(0.4)';
+      ball.style.transition = 'transform 0.1s linear';
 
-      const countdownInterval = setInterval(() => {
-        count--;
-        if (count > 0) {
-          countdownEl.innerText = count;
-          const scale = 1.5 - (3 - count) * 0.3; // Startet bei 1.5 und verkleinert sich
-          ball.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        } else {
-          clearInterval(countdownInterval);
-          countdownEl.style.display = 'none';
-
-          // Setze Ball auf Spielgröße
-          ball.style.transform = 'translate(-50%, -50%) scale(0.4)';
-          ball.style.transition = 'transform 0.1s linear';
-
-          // Starte das Spiel
-          x = window.innerWidth / 2;
-          y = window.innerHeight / 2;
-          updateBallPosition();
-          active = true;
-          startTime = Date.now();
-          requestAnimationFrame(gameLoop);
-        }
-      }, 1000);
+      // Starte das Spiel
+      x = window.innerWidth / 2;
+      y = window.innerHeight / 2;
+      updateBallPosition();
+      active = true;
+      startTime = Date.now();
+      requestAnimationFrame(gameLoop);
     }
+  }, 1000);
+}
+
 
     function updateScores() {
       const topScores = scores.sort((a,b) => b-a).slice(0, 5);
