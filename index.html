@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leitz Balance Board</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f0f0f0;
+      text-align: center;
+    }
+    h1 {
+      margin: 20px;
+      font-size: 2em;
+    }
+    #gameArea {
+      position: relative;
+      margin: 0 auto;
+      width: 90vw;
+      max-width: 500px;
+      height: 90vw;
+      max-height: 500px;
+      background: #ffffff;
+      border: 2px solid #333;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+    #ball {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: #3498db;
+      border-radius: 50%;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .obstacle {
+      position: absolute;
+      background: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>Leitz Balance Board</h1>
+  <div id="gameArea">
+    <div id="ball"></div>
+    <!-- Beispiel-Hindernisse -->
+    <div class="obstacle" style="left: 100px; top: 100px; width: 200px; height: 20px;"></div>
+    <div class="obstacle" style="left: 50px; top: 250px; width: 20px; height: 200px;"></div>
+    <div class="obstacle" style="left: 200px; top: 350px; width: 150px; height: 20px;"></div>
+  </div>
+
+  <script>
+    const ball = document.getElementById("ball");
+    const gameArea = document.getElementById("gameArea");
+
+    let x = gameArea.clientWidth / 2;
+    let y = gameArea.clientHeight / 2;
+    const radius = 15;
+    const speed = 0.5;
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", function(event) {
+        const gamma = event.gamma; // links/rechts (-90 bis 90)
+        const beta = event.beta;   // vor/zurück (-180 bis 180)
+
+        x += gamma * speed;
+        y += beta * speed;
+
+        // Begrenzungen
+        const maxX = gameArea.clientWidth - radius * 2;
+        const maxY = gameArea.clientHeight - radius * 2;
+
+        x = Math.max(0, Math.min(maxX, x));
+        y = Math.max(0, Math.min(maxY, y));
+
+        ball.style.left = x + "px";
+        ball.style.top = y + "px";
+      });
+    } else {
+      alert("DeviceOrientation wird nicht unterstützt");
+    }
+  </script>
+</body>
+</html>
