@@ -15,6 +15,16 @@
       margin: 20px;
       font-size: 2em;
     }
+    #startButton {
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 8px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+    }
     #gameArea {
       position: relative;
       margin: 0 auto;
@@ -26,6 +36,7 @@
       border: 2px solid #333;
       overflow: hidden;
       border-radius: 10px;
+      display: none;
     }
     #ball {
       position: absolute;
@@ -45,15 +56,17 @@
 </head>
 <body>
   <h1>Leitz Balance Board</h1>
+  <button id="startButton">Start</button>
   <div id="gameArea">
     <div id="ball"></div>
-    <!-- Beispiel-Hindernisse -->
+    <!-- Hindernisse -->
     <div class="obstacle" style="left: 100px; top: 100px; width: 200px; height: 20px;"></div>
     <div class="obstacle" style="left: 50px; top: 250px; width: 20px; height: 200px;"></div>
     <div class="obstacle" style="left: 200px; top: 350px; width: 150px; height: 20px;"></div>
   </div>
 
   <script>
+    const startButton = document.getElementById("startButton");
     const ball = document.getElementById("ball");
     const gameArea = document.getElementById("gameArea");
 
@@ -62,27 +75,46 @@
     const radius = 15;
     const speed = 0.5;
 
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener("deviceorientation", function(event) {
-        const gamma = event.gamma; // links/rechts (-90 bis 90)
-        const beta = event.beta;   // vor/zurück (-180 bis 180)
+    function handleOrientation(event) {
+      const gamma = event.gamma || 0; // links/rechts
+      const beta = event.beta || 0;   // vor/zurück
 
-        x += gamma * speed;
-        y += beta * speed;
+      x += gamma * speed;
+      y += beta * speed;
 
-        // Begrenzungen
-        const maxX = gameArea.clientWidth - radius * 2;
-        const maxY = gameArea.clientHeight - radius * 2;
+      const maxX = gameArea.clientWidth - radius * 2;
+      const maxY = gameArea.clientHeight - radius * 2;
 
-        x = Math.max(0, Math.min(maxX, x));
-        y = Math.max(0, Math.min(maxY, y));
+      x = Math.max(0, Math.min(maxX, x));
+      y = Math.max(0, Math.min(maxY, y));
 
-        ball.style.left = x + "px";
-        ball.style.top = y + "px";
-      });
-    } else {
-      alert("DeviceOrientation wird nicht unterstützt");
+      ball.style.left = x + "px";
+      ball.style.top = y + "px";
     }
+
+    startButton.addEventListener("click", async () => {
+      // iOS: Zugriff anfragen
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const response = await DeviceOrientationEvent.requestPermission();
+          if (response === 'granted') {
+            window.addEventListener("deviceorientation", handleOrientation);
+            startButton.style.display = "none";
+            gameArea.style.display = "block";
+          } else {
+            alert("Zugriff auf Bewegungssensoren wurde abgelehnt.");
+          }
+        } catch (error) {
+          console.error("Fehler beim Anfragen der Berechtigung:", error);
+        }
+      } else {
+        // Für andere Browser (z. B. Android)
+        window.addEventListener("deviceorientation", handleOrientation);
+        startButton.style.display = "none";
+        gameArea.style.display = "block";
+      }
+    });
   </script>
 </body>
 </html>
