@@ -20,6 +20,7 @@
       width: 100%;
       font-size: 24px;
       font-weight: bold;
+      z-index: 10;
     }
 
     #gameArea {
@@ -30,20 +31,28 @@
       overflow: hidden;
     }
 
+    .ring {
+      position: absolute;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
     #ball {
       position: absolute;
-      width: 50px;
-      height: 50px;
+      width: 80px;
+      height: 80px;
       background: limegreen;
       border-radius: 50%;
-      box-shadow: 0 0 30px limegreen;
+      box-shadow: 0 0 40px limegreen;
       transition: transform 0.1s linear;
+      z-index: 2;
     }
 
     #wind {
       position: absolute;
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       background: rgba(0,255,255,0.1);
       border-radius: 50%;
       border: 2px solid cyan;
@@ -51,6 +60,7 @@
       transition: transform 0.3s ease;
       animation: pulse 1s infinite;
       display: none;
+      z-index: 1;
     }
 
     @keyframes pulse {
@@ -65,12 +75,16 @@
       transform: translate(-50%, -50%);
       font-size: 32px;
       display: none;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
   <div id="title">Leitz Balance Board</div>
   <div id="gameArea">
+    <div class="ring" style="width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+    <div class="ring" style="width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+    <div class="ring" style="width: 700px; height: 700px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
     <div id="ball"></div>
     <div id="wind"></div>
     <div id="gameOver"></div>
@@ -102,8 +116,8 @@
         return;
       }
 
-      ball.style.left = `${x - 25}px`;
-      ball.style.top = `${y - 25}px`;
+      ball.style.left = `${x - 40}px`;
+      ball.style.top = `${y - 40}px`;
     }
 
     let tiltX = 0, tiltY = 0;
@@ -124,13 +138,13 @@
 
       // zufällige Windrichtung
       const angle = Math.random() * 2 * Math.PI;
-      const strength = 0.3 + Math.random() * 0.3 + speed / 10;
+      const strength = 0.6 + Math.random() * 0.6 + speed / 5; // verstärkt
       windForce.x = Math.cos(angle) * strength;
       windForce.y = Math.sin(angle) * strength;
 
       // Zeige Windkreis visuell
-      wind.style.left = `${x - 50}px`;
-      wind.style.top = `${y - 50}px`;
+      wind.style.left = `${x - 60}px`;
+      wind.style.top = `${y - 60}px`;
       wind.style.display = 'block';
 
       setTimeout(() => {
