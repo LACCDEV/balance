@@ -2,119 +2,183 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Leitz Balance Board</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: sans-serif;
-      background: #f0f0f0;
-      text-align: center;
-    }
-    h1 {
-      margin: 20px;
-      font-size: 2em;
-    }
-    #startButton {
-      padding: 10px 20px;
-      font-size: 1em;
-      margin-bottom: 20px;
-      border: none;
-      border-radius: 8px;
-      background: #3498db;
+      padding: 0;
+      background: #111;
       color: white;
-      cursor: pointer;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     #gameArea {
       position: relative;
-      margin: 0 auto;
-      width: 90vw;
-      max-width: 500px;
-      height: 90vw;
-      max-height: 500px;
-      background: #ffffff;
-      border: 2px solid #333;
+      width: 90vmin;
+      height: 90vmin;
+      background: radial-gradient(circle, #222 60%, #000);
+      border-radius: 50%;
       overflow: hidden;
-      border-radius: 10px;
-      display: none;
+    }
+    .ring {
+      position: absolute;
+      border: 1px solid #444;
+      border-radius: 50%;
+      pointer-events: none;
     }
     #ball {
       position: absolute;
-      width: 30px;
-      height: 30px;
-      background: #3498db;
+      width: 40px;
+      height: 40px;
+      background: #32ff00;
       border-radius: 50%;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
+      box-shadow: 0 0 20px #32ff00aa;
     }
-    .obstacle {
+    #startButton, #retryButton {
       position: absolute;
-      background: #444;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 1.2em;
+      background: #32ff00;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 2;
+    }
+    #timer {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5em;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h1>Leitz Balance Board</h1>
-  <button id="startButton">Start</button>
-  <div id="gameArea">
-    <div id="ball"></div>
-    <!-- Hindernisse -->
-    <div class="obstacle" style="left: 100px; top: 100px; width: 200px; height: 20px;"></div>
-    <div class="obstacle" style="left: 50px; top: 250px; width: 20px; height: 200px;"></div>
-    <div class="obstacle" style="left: 200px; top: 350px; width: 150px; height: 20px;"></div>
+  <div id="gameContainer">
+    <div id="gameArea">
+      <div id="ball"></div>
+      <div id="timer">0.00s</div>
+      <button id="startButton">Start</button>
+      <button id="retryButton" style="display: none;">Erneut versuchen</button>
+    </div>
   </div>
 
   <script>
-    const startButton = document.getElementById("startButton");
     const ball = document.getElementById("ball");
+    const startButton = document.getElementById("startButton");
+    const retryButton = document.getElementById("retryButton");
+    const timer = document.getElementById("timer");
     const gameArea = document.getElementById("gameArea");
 
-    let x = gameArea.clientWidth / 2;
-    let y = gameArea.clientHeight / 2;
-    const radius = 15;
-    const speed = 0.5;
+    const maxX = gameArea.clientWidth - 40;
+    const maxY = gameArea.clientHeight - 40;
+    let x = maxX / 2;
+    let y = maxY / 2;
+    let speed = 0.5;
+    let startTime;
+    let timerInterval;
+    let levelInterval;
+    let gameRunning = false;
 
-    function handleOrientation(event) {
-      const gamma = event.gamma || 0; // links/rechts
-      const beta = event.beta || 0;   // vor/zurück
-
+    function updateBall(gamma, beta) {
       x += gamma * speed;
       y += beta * speed;
-
-      const maxX = gameArea.clientWidth - radius * 2;
-      const maxY = gameArea.clientHeight - radius * 2;
-
       x = Math.max(0, Math.min(maxX, x));
       y = Math.max(0, Math.min(maxY, y));
-
       ball.style.left = x + "px";
       ball.style.top = y + "px";
+
+      // Game Over, wenn Ball an den Rand kommt
+      if (x <= 0 || x >= maxX || y <= 0 || y >= maxY) {
+        gameOver();
+      }
     }
 
-    startButton.addEventListener("click", async () => {
-      // iOS: Zugriff anfragen
-      if (typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof DeviceOrientationEvent.requestPermission === 'function') {
+    function gameOver() {
+      gameRunning = false;
+      window.removeEventListener("deviceorientation", orientationHandler);
+      clearInterval(timerInterval);
+      clearInterval(levelInterval);
+      retryButton.style.display = "block";
+    }
+
+    function startGame() {
+      x = maxX / 2;
+      y = maxY / 2;
+      speed = 0.5;
+      gameRunning = true;
+      retryButton.style.display = "none";
+      startButton.style.display = "none";
+      ball.style.left = x + "px";
+      ball.style.top = y + "px";
+
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        timer.textContent = `${elapsed}s`;
+      }, 50);
+
+      levelInterval = setInterval(() => {
+        speed += 0.1;
+      }, 3000); // alle 3 Sekunden wird's schwieriger
+
+      window.addEventListener("deviceorientation", orientationHandler);
+    }
+
+    function orientationHandler(event) {
+      if (!gameRunning) return;
+      const gamma = event.gamma || 0;
+      const beta = event.beta || 0;
+      updateBall(gamma, beta);
+    }
+
+    async function requestPermissionAndStart() {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
-          const response = await DeviceOrientationEvent.requestPermission();
-          if (response === 'granted') {
-            window.addEventListener("deviceorientation", handleOrientation);
-            startButton.style.display = "none";
-            gameArea.style.display = "block";
+          const permissionState = await DeviceOrientationEvent.requestPermission();
+          if (permissionState === 'granted') {
+            startGame();
           } else {
-            alert("Zugriff auf Bewegungssensoren wurde abgelehnt.");
+            alert("Sensorzugriff verweigert.");
           }
-        } catch (error) {
-          console.error("Fehler beim Anfragen der Berechtigung:", error);
+        } catch (e) {
+          alert("Fehler beim Anfragen des Sensorzugriffs.");
         }
       } else {
-        // Für andere Browser (z. B. Android)
-        window.addEventListener("deviceorientation", handleOrientation);
-        startButton.style.display = "none";
-        gameArea.style.display = "block";
+        startGame();
       }
-    });
+    }
+
+    startButton.addEventListener("click", requestPermissionAndStart);
+    retryButton.addEventListener("click", requestPermissionAndStart);
+
+    // Ringe zeichnen
+    for (let i = 1; i <= 5; i++) {
+      const ring = document.createElement("div");
+      ring.className = "ring";
+      const size = 100 + i * 100;
+      ring.style.width = `${size}px`;
+      ring.style.height = `${size}px`;
+      ring.style.left = `calc(50% - ${size / 2}px)`;
+      ring.style.top = `calc(50% - ${size / 2}px)`;
+      gameArea.appendChild(ring);
+    }
   </script>
 </body>
 </html>
